@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TÍTULO DO TÓPICO • Resumo</title>
+<link rel="stylesheet" href="style.css">
+<style>
+/* complementos leves, mantendo estética existente */
+.container-resumo { max-width: 1100px; margin: 0 auto; padding: 1.25rem; }
+.header-resumo { display:flex; align-items:center; gap:1rem; flex-wrap:wrap; }
+.header-resumo h1 { margin:0; font-size: clamp(1.4rem, 2.5vw, 2rem); }
+.badge-topico { background:#eef2ff; color:#1f2a7a; padding:.25rem .5rem; border-radius: 999px; font-weight:600; }
+.player-wrap { position:relative; padding-top:56.25%; border-radius: 16px; overflow:hidden; box-shadow: 0 8px 24px rgba(0,0,0,.08); margin: 1rem 0 1.5rem; }
+.player-wrap iframe { position:absolute; inset:0; width:100%; height:100%; border:0; }
+.grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(260px,1fr)); gap:1rem; }
+.card { background:#fff; border-radius:16px; padding:1rem; box-shadow:0 6px 18px rgba(0,0,0,.06); }
+.card h3 { margin:.25rem 0 .5rem; font-size:1rem; }
+.filters { display:grid; grid-template-columns: repeat(3, minmax(160px, 1fr)); gap:.75rem; margin:1rem 0; }
+@media (max-width: 720px) { .filters { grid-template-columns: 1fr; } }
+.select, .input { width:100%; padding:.6rem .8rem; border:1px solid #e5e7eb; border-radius:12px; }
+.btn { padding:.6rem .9rem; border:0; border-radius:12px; cursor:pointer; font-weight:600; }
+.btn-primary { background:#1f2a7a; color:#fff; }
+.section-title { margin-top:1.25rem; margin-bottom:.5rem; font-size:1.1rem; font-weight:700; }
+.small { font-size:.9rem; color:#555; }
+hr.sep { border:0; height:1px; background:#eee; margin:1.25rem 0; }
+.note { background:#f8fafc; padding: .75rem 1rem; border-radius:12px; }
+</style>
+</head>
+<body>
+<header class="header-resumo container-resumo">
+  <img src="logo-cepmg.png" alt="CEPMG" style="height:52px; width:auto;">
+  <div>
+    <div class="badge-topico" id="disciplina-badge">Resumo</div>
+    <h1 id="titulo-topico">TÍTULO DO TÓPICO</h1>
+    <div class="small" id="canal-info">Selecione um tópico abaixo para abrir a busca do canal indicado.</div>
+  </div>
+</header>
+
+<main class="container-resumo">
+  <section>
+    <div class="player-wrap">
+      <iframe id="player" src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ" allowfullscreen title="Player do tópico"></iframe>
+    </div>
+    <div class="note small">
+      Abra qualquer tópico na lista abaixo e clique em <b>Ver vídeos</b> para pesquisar diretamente no YouTube dentro do(s) canal(is) indicado(s).<br>
+      Para tocar um vídeo específico aqui no player, use o parâmetro <code>?v=ID_DO_VIDEO&amp;tit=T%C3%ADtulo&amp;disc=Disciplina</code> na URL.
+    </div>
+  </section>
+
+  <hr class="sep"/>
+
+  <section>
+    <div class="filters">
+      <select id="disciplina" class="select"></select>
+      <select id="canal" class="select"></select>
+      <select id="topico" class="select"></select>
+    </div>
+    <button class="btn btn-primary" id="btnBuscar">Ver vídeos</button>
+  </section>
+
+  <section>
+    <h2 class="section-title">Tópicos por disciplina</h2>
+    <div id="cards" class="grid"></div>
+  </section>
+</main>
+
+<script>
+const CATALOGO = {"Matemática": {"canais": ["Professor Ferreto"], "topicos": ["Aritmética básica", "Porcentagem", "Razão e Proporção", "Funções", "Equações e Inequações", "Progressões (PA/PG)", "Geometria Plana", "Geometria Espacial", "Trigonometria", "Probabilidade", "Estatística", "Análise Combinatória", "Matemática Financeira"]}, "Física": {"canais": ["Universo Narrado", "Professor Boaro"], "topicos": ["Cinemática", "Dinâmica (Leis de Newton)", "Trabalho e Energia", "Impulso e Momento", "Gravitação", "Hidrostática", "Termologia", "Ondulatória", "Óptica", "Eletrostática", "Eletrodinâmica", "Magnetismo"]}, "História": {"canais": ["Parabólica", "Débora Aladim"], "topicos": ["Brasil Colônia", "Brasil Império", "República Velha", "Era Vargas", "Ditadura Militar", "Redemocratização", "Antiguidade Clássica", "Idade Média", "Idade Moderna", "Revolução Francesa", "Revolução Industrial", "Século XX (Guerras Mundiais)", "Guerra Fria"]}, "Biologia": {"canais": ["Biologia com Landim", "Prof Samuel Cunha"], "topicos": ["Citologia", "Histologia", "Embriologia", "Genética", "Evolução", "Ecologia", "Fisiologia Humana", "Parasitologia", "Botânica", "Zoologia"]}, "Geografia": {"canais": ["Thais Formaggio"], "topicos": ["Cartografia", "Geologia e Relevo", "Climatologia", "Hidrografia", "Demografia", "Agropecuária", "Indústria e Serviços", "Globalização", "Geopolítica", "Urbanização", "Meio Ambiente"]}, "Química": {"canais": ["Química com o Cabral", "Monstro da Química"], "topicos": ["Atomística", "Tabela Periódica", "Ligações Químicas", "Estequiometria", "Soluções", "Termoquímica", "Cinética Química", "Equilíbrio Químico", "Eletroquímica", "Química Orgânica", "Propriedades da Matéria"]}, "Português": {"canais": ["Professora Pamba"], "topicos": ["Interpretação de Texto", "Gramática (Morfologia)", "Gramática (Sintaxe)", "Figuras de Linguagem", "Variação Linguística", "Gêneros Textuais", "Semântica"]}, "Redação": {"canais": ["Foco no Mil", "Luma e Ponto"], "topicos": ["Competências do ENEM", "Projeto de Texto", "Tese e Repertório", "Coesão e Coerência", "Intervenção", "Estrutura de Parágrafos", "Análise de Propostas"]}, "Inglês": {"canais": ["Curso ENEM Gratuito"], "topicos": ["Compreensão de Texto", "Falsos Cognatos", "Inferência e Contexto", "Estruturas Comuns", "Interpretar Gráficos e Imagens"]}};
+
+function el(tag, props = {}, children = []) {
+  const e = document.createElement(tag);
+  Object.entries(props).forEach(([k,v]) => (k in e) ? e[k]=v : e.setAttribute(k,v));
+  [].concat(children).forEach(c => e.appendChild(typeof c === 'string' ? document.createTextNode(c) : c));
+  return e;
+}
+
+const selDisc = document.getElementById('disciplina');
+const selCanal = document.getElementById('canal');
+const selTopico = document.getElementById('topico');
+const cardsDiv = document.getElementById('cards');
+const btnBuscar = document.getElementById('btnBuscar');
+
+function popularDisciplinas() {
+  selDisc.innerHTML = '';
+  Object.keys(CATALOGO).forEach(d => selDisc.appendChild(el('option', { value: d }, [d])));
+}
+function popularCanais(disc) {
+  selCanal.innerHTML = '';
+  CATALOGO[disc].canais.forEach(c => selCanal.appendChild(el('option', { value: c }, [c])));
+}
+function popularTopicos(disc) {
+  selTopico.innerHTML = '';
+  CATALOGO[disc].topicos.forEach(t => selTopico.appendChild(el('option', { value: t }, [t])));
+}
+
+function buildCards() {
+  cardsDiv.innerHTML = '';
+  Object.entries(CATALOGO).forEach(([disc, data]) => {
+    data.topicos.forEach(topic => {
+      const card = el('div', { className: 'card' }, [
+        el('h3', {}, [topic]),
+        el('div', { className: 'small' }, ['Disciplina: ', disc]),
+        el('div', { style: 'margin:.5rem 0 .75rem' }, [
+          el('div', { className: 'small' }, ['Canais indicados: ', data.canais.join(' • ')])
+        ]),
+        el('div', {}, data.canais.map(canal => el('a', {
+          href: 'https://www.youtube.com/results?search_query=' + encodeURIComponent(topic + ' ' + canal),
+          target: '_blank',
+          className: 'btn',
+          style: 'margin:.25rem .25rem .25rem 0; display:inline-block; text-decoration:none;'
+        }, ['Ver vídeos — ', canal]))),
+        el('div', { className: 'small', style:'margin-top:.5rem' }, [
+          'Abrir este tópico no player: ',
+          el('a', {
+            href: location.pathname + '?tit=' + encodeURIComponent(topic) + '&disc=' + encodeURIComponent(disc) + '&v=dQw4w9WgXcQ'
+          }, ['resumo.html?tit=...&disc=...&v=ID'])
+        ])
+      ]);
+      cardsDiv.appendChild(card);
+    });
+  });
+}
+
+function lerParams() {
+  const p = new URLSearchParams(location.search);
+  const v = p.get('v');
+  const tit = p.get('tit') || 'TÍTULO DO TÓPICO';
+  const disc = p.get('disc') || 'Resumo';
+  if (v) document.getElementById('player').src = 'https://www.youtube-nocookie.com/embed/' + v;
+  document.getElementById('titulo-topico').textContent = tit;
+  document.getElementById('disciplina-badge').textContent = disc;
+  const canalInfo = document.getElementById('canal-info');
+  canalInfo.textContent = 'Tópico: ' + tit + ' • ' + disc;
+}
+
+btnBuscar.addEventListener('click', () => {
+  const canal = selCanal.value;
+  const topico = selTopico.value;
+  const url = 'https://www.youtube.com/results?search_query=' + encodeURIComponent(topico + ' ' + canal);
+  window.open(url, '_blank');
+});
+
+selDisc.addEventListener('change', () => {
+  const d = selDisc.value;
+  popularCanais(d);
+  popularTopicos(d);
+});
+
+popularDisciplinas();
+popularCanais(selDisc.value || Object.keys(CATALOGO)[0]);
+popularTopicos(selDisc.value || Object.keys(CATALOGO)[0]);
+buildCards();
+lerParams();
+</script>
+</body>
+</html>

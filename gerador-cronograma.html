@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<title>Gerador de Cronograma Inteligente</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;display=swap" rel="stylesheet"/>
+<style>
+    :root {
+      --bg: #ffffff;
+      --text: #0f172a;
+      --muted: #6b7280;
+      --primary: #635bff;
+      --primary-2: #7a70ff;
+      --border: #e5e7eb;
+      --card: #ffffff;
+      --shape1: #f5f6ff;
+      --shape2: #eef0ff;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      color: var(--text);
+      background: var(--bg);
+      line-height: 1.45;
+    }
+    .hero {
+      position: relative;
+      padding: 28px 20px 36px;
+      overflow: hidden;
+      background: var(--bg);
+      z-index: 0;
+    }
+    .back-arrow {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      font-size: 28px;
+      text-decoration: none;
+      color: var(--primary);
+      font-weight: bold;
+    }
+    .wrap { max-width: 1100px; margin: 0 auto; position: relative; z-index: 1; }
+    .title { font-size: 44px; font-weight: 800; letter-spacing: -0.02em; margin: 8px 0 6px; text-align: center; }
+    .subtitle { color: var(--muted); font-size: 16px; margin: 0 0 16px; text-align: center; }
+    .grid-area { margin: 10px 0 22px; }
+    .grade { width: 100%; border-collapse: collapse; border: 1px solid var(--border); border-radius: 14px; overflow: hidden; background:#fff; }
+    .grade th, .grade td { border: 1px solid var(--border); padding: 10px; text-align: center; font-size: 13px; }
+    .grade thead th { background: #fafafe; font-weight: 800; }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 20px;
+      box-shadow: 0 10px 30px rgba(2,6,23,0.06);
+    }
+    .layout { display: block; }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 640px) { .form-grid { grid-template-columns: 1fr; } }
+    label { font-weight: 600; font-size: 14px; display:block; margin-bottom: 6px; }
+    input[type="number"], select, .days {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 14px;
+      background: #fff;
+    }
+    .days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; padding: 10px; background:#fff;border-radius:12px;border:1px solid var(--border); width: 100%; }
+    @media (max-width: 640px) { .days { grid-template-columns: repeat(2, 1fr); } }
+    .days label { font-weight: 500; border: 1px solid var(--border); border-radius: 10px; padding: 8px 10px; display:flex; align-items:center; gap:8px; background:#fff; }
+    .subjects { display: grid; grid-template-columns: 1fr 140px; gap: 10px; margin-top: 12px; }
+    .subject-row { display: contents; }
+    .btns { display:flex; gap: 12px; margin-top: 16px; flex-wrap: wrap; }
+    .btn {
+      appearance: none; border: none; cursor: pointer;
+      border-radius: 14px; padding: 12px 16px; font-weight: 700; font-size: 15px;
+      background: var(--primary); color: #fff;
+      box-shadow: 0 8px 24px rgba(99,91,255,0.3);
+      transition: transform .06s ease, box-shadow .2s ease, background .2s ease;
+    }
+    .btn:hover { background: var(--primary-2); box-shadow: 0 10px 28px rgba(99,91,255,0.35); }
+    .btn:active { transform: translateY(1px); }
+    .note { color: var(--muted); margin: 4px 0 0; font-size: 14px; }
+  </style>
+</head>
+<body>
+<section class="hero">
+<a href="novidades.html" class="back-arrow">←</a>
+<div class="wrap">
+<h1 class="title">Monte seu cronograma semanal</h1>
+<p class="subtitle">Cronograma inteligente com todas as matérias e horários reais! 🚀</p>
+<div class="grid-area" id="gridArea">
+<table class="grade" id="gradeTable">
+<thead><tr id="gradeHead"></tr></thead>
+<tbody id="gradeBody"></tbody>
+</table>
+</div>
+<div class="layout">
+<div class="card">
+<div class="form-grid">
+<div>
+<label for="turnoSel">Turno</label>
+<select id="turnoSel">
+  <option value="matutino">Matutino (08h - 12h)</option>
+  <option value="vespertino">Vespertino (13h - 18h)</option>
+  <option value="noturno">Noturno (19h - 23h)</option>
+  <option value="vespertino_noturno">Vespertino + Noturno (13h - 23h)</option>
+  <option value="matutino_vespertino_noturno">Matutino + Vespertino + Noturno (08h - 23h)</option>
+  <option value="matutino_noturno">Matutino + Noturno (08h - 12h, 19h - 23h)</option>
+</select>
+</div>
+<div>
+<label for="horasDia">Horas por dia</label>
+<input id="horasDia" max="12" min="1" type="number" value="3"/>
+</div>
+<div>
+<label for="maiorDif">Maior dificuldade</label>
+<select id="maiorDif"></select>
+</div>
+<div>
+<label>Dias da semana (estudo)</label>
+<div class="days" id="diasWeek"></div>
+</div>
+</div>
+<div style="margin-top:12px;">
+<label>Matérias &amp; dificuldade</label>
+<div class="subjects" id="listaMaterias"></div>
+</div>
+<div class="btns">
+<button class="btn" id="btnGerar">Gerar ZIP + PDF</button>
+</div>
+<p class="note">Agora o cronograma é realmente balanceado!</p>
+</div>
+</div>
+</div>
+</section>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script>
+const SUBJECTS = ["Biologia","Sociologia","Filosofia","Física","Geografia","História","Inglês","Matemática","Português","Química","Redação"];
+const dias = ["Segunda","Terça","Quarta","Quinta","Sexta","Sábado","Domingo"];
+const checkDays = ["Segunda","Terça","Quarta","Quinta","Sexta"];
+
+const maiorDifSel=document.getElementById("maiorDif");
+const listaMaterias=document.getElementById("listaMaterias");
+const diasWeek=document.getElementById("diasWeek");
+const horasDiaInput=document.getElementById("horasDia");
+const turnoSel=document.getElementById("turnoSel");
+const gradeHead=document.getElementById("gradeHead");
+const gradeBody=document.getElementById("gradeBody");
+
+const turnosHorarios={
+ "matutino":["08:00","09:00","10:00","11:00","12:00"],
+ "vespertino":["13:00","14:00","15:00","16:00","17:00","18:00"],
+ "noturno":["19:00","20:00","21:00","22:00","23:00"],
+ "vespertino_noturno":["13:00","14:00","15:00","16:00","17:00","18:00","19:00","20:00","21:00","22:00","23:00"],
+ "matutino_noturno":["08:00","09:00","10:00","11:00","12:00","19:00","20:00","21:00","22:00","23:00"],
+ "matutino_vespertino_noturno":["08:00","09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00","18:00","19:00","20:00","21:00","22:00","23:00"]
+};
+
+function mountForm(){
+ maiorDifSel.innerHTML=SUBJECTS.map(s=>`<option value="${s}">${s}</option>`).join("");
+ diasWeek.innerHTML=dias.map(d=>`<label><input type="checkbox" value="${d}" ${checkDays.includes(d)?'checked':''}/> ${d}</label>`).join("");
+ listaMaterias.innerHTML=SUBJECTS.map(s=>`
+   <div class="subject-row"><div style="padding:10px 12px;border:1px solid var(--border);border-radius:12px;background:#fff;">${s}</div>
+   <select data-subj="${s}">
+     <option value="1">Fácil</option>
+     <option value="2" selected>Médio</option>
+     <option value="3">Difícil</option>
+   </select></div>
+ `).join("");
+}
+
+function getConfig(){
+ const horas=Math.max(1,parseInt(horasDiaInput.value||"1",10));
+ const checked=Array.from(diasWeek.querySelectorAll('input[type=checkbox]')).filter(i=>i.checked).map(i=>i.value);
+ const diffs={};
+ listaMaterias.querySelectorAll('select').forEach(sel=>{diffs[sel.dataset.subj]=parseInt(sel.value,10);});
+ return {horas,checkedDays:checked,diffs,maior:maiorDifSel.value,turno:turnoSel.value};
+}
+
+function buildWeights(diffs,maior){
+ const weights={};
+ SUBJECTS.forEach(s=>{let w=diffs[s]||1;if(s===maior)w+=2;weights[s]=w;});
+ return weights;
+}
+
+// Distribui garantindo todas matérias
+function distribute(cfg){
+ const weights=buildWeights(cfg.diffs,cfg.maior);
+ const materias=[];Object.entries(weights).forEach(([s,w])=>{for(let i=0;i<w;i++)materias.push(s);});
+ let index=0;
+ const perDay={};
+ dias.forEach(d=>{
+   const slots=[];
+   if(cfg.checkedDays.includes(d)){
+     for(let i=0;i<cfg.horas;i++){slots.push(materias[index%materias.length]);index++;}
+   } else {for(let i=0;i<cfg.horas;i++)slots.push("");}
+   perDay[d]=slots;
+ });
+ return perDay;
+}
+
+function getHorario(turno,horas){return (turnosHorarios[turno]||[]).slice(0,horas);}
+
+function renderGrid(perDay,cfg){
+ const horarios=getHorario(cfg.turno,cfg.horas);
+ gradeHead.innerHTML="";const th0=document.createElement("th");th0.textContent="Horário";gradeHead.appendChild(th0);
+ dias.forEach(d=>{const th=document.createElement("th");th.textContent=d;gradeHead.appendChild(th);});
+ gradeBody.innerHTML="";
+ for(let i=0;i<cfg.horas;i++){
+   const tr=document.createElement("tr");const th=document.createElement("th");th.textContent=horarios[i]||"";tr.appendChild(th);
+   dias.forEach(d=>{const td=document.createElement("td");td.textContent=perDay[d][i]||"—";tr.appendChild(td);});
+   gradeBody.appendChild(tr);
+ }
+}
+
+async function generatePDFs(perDay,cfg){
+ const horarios=getHorario(cfg.turno,cfg.horas);
+ const zip=new JSZip();const {jsPDF}=window.jspdf;
+ const doc=new jsPDF("l","pt","a4");
+ doc.setFontSize(18);doc.text("Cronograma semanal",40,40);
+ const head=[["Horário"].concat(dias)];const body=[];
+ for(let i=0;i<cfg.horas;i++){const row=[horarios[i]||""];dias.forEach(d=>row.push(perDay[d][i]||""));body.push(row);}
+ doc.autoTable({head,body,startY:60,styles:{fontSize:10,halign:"center",valign:"middle"},headStyles:{fillColor:[250,250,254],textColor:[0,0,0]},tableLineColor:[229,231,235],tableLineWidth:1});
+ zip.file("cronograma-semanal.pdf",doc.output("blob"));
+ for(const d of dias){
+   const ddoc=new jsPDF("p","pt","a4");
+   ddoc.setFontSize(18);ddoc.text("Cronograma - "+d,40,40);
+   const bodyDay=perDay[d].map((s,i)=>[horarios[i]||"",s||"—"]);
+   ddoc.autoTable({head:[["Horário","Matéria"]],body:bodyDay,startY:70,styles:{fontSize:11,halign:"center",valign:"middle"},tableLineColor:[229,231,235],tableLineWidth:1});
+   zip.file(d+".pdf",ddoc.output("blob"));
+ }
+ const blob=await zip.generateAsync({type:"blob"});
+ const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="cronograma.zip";a.click();
+}
+
+function updateGrid(){const cfg=getConfig();const perDay=distribute(cfg);renderGrid(perDay,cfg);return{cfg,perDay};}
+
+mountForm();updateGrid();
+document.addEventListener("change",(e)=>{if(e.target.closest('.days')||e.target.id==='horasDia'||e.target.matches('#listaMaterias select')||e.target.id==='maiorDif'||e.target.id==='turnoSel')updateGrid();});
+document.getElementById("btnGerar").addEventListener("click",async()=>{const {cfg,perDay}=updateGrid();await generatePDFs(perDay,cfg);});
+</script>
+</body>
+</html>
